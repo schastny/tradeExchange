@@ -11,7 +11,9 @@ import scala.sys.process._
  * Uses <i>ofc.ini</i> config file which is located at <b>ofcDir/Tools</b>.<br/>
  * To know more about OFC please refer to <a href="http://technet.microsoft.com/en-us/library/cc179019%28v=office.14%29.aspx">http://technet.microsoft.com/en-us/library/cc179019%28v=office.14%29.aspx</a><br/>
  * @param ofcDir A directory where The Office Migration Planning Manager (OMPM) has been installed
-*/
+ * @param sourceFolder """d:\\tmp\\scala"""
+ * @param destinationFolder """d:\\tmp\\scala\\converted"""
+ */
 class DocToDocx(ofcDir: String, sourceFolder: String, destinationFolder: String) {
 
   /**
@@ -24,29 +26,32 @@ class DocToDocx(ofcDir: String, sourceFolder: String, destinationFolder: String)
     convertingCommand.!
   }
 
+  /**
+   * fldr=d:\tmp\scala //FoldersToConvert
+   */
   def setFoldersToConvert {
-    //fldr=d:\tmp\scala //FoldersToConvert
-    val replaceString = "[Run]"
-    val replacement = "OLOLO"
-    replaceInFile(replaceString, replacement)
+    val func = (x: String) => x.replaceAll("(fldr=){1}(.)*", "fldr="+sourceFolder)
+    replaceInFile(func)
   }
 
+  /**
+   * DestinationPathTemplate=d:\tmp\scala\converted
+   */
   def setDestinationPathTemplate {
-    //DestinationPathTemplate=d:\tmp\scala\converted
+    val func = (x: String) => x.replaceAll("(DestinationPathTemplate=){1}(.)*", "DestinationPathTemplate="+destinationFolder)
+    replaceInFile(func)
   }
 
-  def replaceInFile(replaceString:String, replacement:String) = {
+  private def replaceInFile(func: (String) => (String)) = {
     val iniString = ofcDir + "Tools/ofc.ini"
 
     val source = Source.fromFile(iniString)
-    val lines = source
-      .mkString.split("\n").toList
-      .map( _.replaceAll(replaceString, replacement) )
+    val lines = source.mkString.split("\\n").toList.map(func)
     source.close()
 
     val writer = new PrintWriter(iniString)
     for(line <- lines)
-      writer.println(line)
+      writer.print(line)
     writer.close()
   }
 
