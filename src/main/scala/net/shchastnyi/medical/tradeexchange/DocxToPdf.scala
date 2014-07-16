@@ -78,6 +78,7 @@ class DocxToPdf(saveFO: Boolean = false) {
 
     // Removing unneeded parts
     removeVanished(wordMLPackage, classOf[org.docx4j.wml.R])
+    // Cleaning unneeded styles
     removeStyle(wordMLPackage, "notranslate")
 
     // Set up font mapper (optional)
