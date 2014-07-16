@@ -1,3 +1,5 @@
+package net.shchastnyi.medical.tradeexchange
+
 import java.io.{File, FileOutputStream}
 import javax.xml.bind.JAXBElement
 
@@ -100,9 +102,3 @@ class DocToPdf(val saveFO: Boolean = false) {
 
 }
 
-object Converter extends App {
-
-  val doccer = new DocToPdf
-  doccer.convert("""d:/tmp/test.docx""")
-
-}
