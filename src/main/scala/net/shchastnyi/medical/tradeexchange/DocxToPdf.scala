@@ -11,10 +11,13 @@ import org.docx4j.wml.{ContentAccessor, R}
 
 import scala.collection.JavaConverters._
 
-//saveFO - Save the intermediate XSL FO. Don't do this in production!
-class DocToPdf(val saveFO: Boolean = false) {
+/**
+ *
+ * @param saveFO Save the intermediate XSL FO. Don't do this in production!
+ */
+class DocxToPdf(saveFO: Boolean = false) {
 
-  def getAllElementFromObject(obj: AnyRef, toSearch: Class[_]): List[AnyRef] =
+  private def getAllElementFromObject(obj: AnyRef, toSearch: Class[_]): List[AnyRef] =
     getAllElementFromObjectInternal(obj, toSearch, List())
 
   private def getAllElementFromObjectInternal(obj: AnyRef, toSearch: Class[_], result: List[AnyRef]): List[AnyRef] = {
@@ -36,7 +39,14 @@ class DocToPdf(val saveFO: Boolean = false) {
     }
   }
 
-  def removeVanished(template: WordprocessingMLPackage, clazz: Class[_]) {
+  /**
+   * Removes all hidden text from MS Word docx document (content that is marked with ''vanish'' tag).<br/>
+   * Read more about vanish tag for docx <a href="http://msdn.microsoft.com/en-us/library/office/cc547047%28v=office.15%29.aspx">here</a><br/>
+   * This tag is present when one translates docx documents with google translate service.
+   * @param template WordprocessingMLPackage instance
+   * @param clazz Specific
+   */
+  private def removeVanished(template: WordprocessingMLPackage, clazz: Class[_]) {
     for (r <- getAllElementFromObject(template.getMainDocumentPart, clazz)) {
       val rElement = r.asInstanceOf[org.docx4j.wml.R]
       val rpr = rElement.getRPr
@@ -47,7 +57,7 @@ class DocToPdf(val saveFO: Boolean = false) {
     }
   }
 
-  def removeStyle(template: WordprocessingMLPackage, styleName: String) {
+  private def removeStyle(template: WordprocessingMLPackage, styleName: String) {
     for (r <- getAllElementFromObject(template.getMainDocumentPart, classOf[R])) {
       val rElement = r.asInstanceOf[R]
       val rpr = rElement.getRPr
@@ -57,13 +67,13 @@ class DocToPdf(val saveFO: Boolean = false) {
     }
   }
 
-  def convert(inputfilepath: String){
+  def convert(inputfilepath: String) {
     // Set regex if you want to restrict to some defined subset of fonts
     val regex = ".*(calibri|camb|cour|arial|times|comic|georgia|impact|LSANS|pala|tahoma|trebuc|verdana|symbol|webdings|wingding).*"
     PhysicalFonts.setRegex(regex)
 
     // Document loading (required)
-    println("SCALA! Loading file from " + inputfilepath)
+    println("Loading file from " + inputfilepath)
     val wordMLPackage = WordprocessingMLPackage.load(new File(inputfilepath))
 
     // Removing unneeded parts
