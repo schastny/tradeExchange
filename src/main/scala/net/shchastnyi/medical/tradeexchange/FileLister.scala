@@ -13,10 +13,15 @@ import scala.util.parsing.input.StreamReader
  */
 object FileLister {
 
-  val plan = """(?s)(ГОДОВОЙ ПЛАН ЗАКУПОК).*?(на)""".r
-  val provedenie = """(?s)(Объявление).*?(о проведении открытых торгов)""".r
-  val zapros = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
-  val dkt = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
+  val plan_pattern        = """(?s)(ГОДОВОЙ ПЛАН ЗАКУПОК).*?(на)""".r
+  val plan_title          = "Годовой план закупок"
+  val provedenie_pattern  = """(?s)(Объявление).*?(о проведении открытых торгов)""".r
+  val provedenie_title    = "Объявление о проведении открытых торгов"
+  val zapros_pattern      = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
+  val zapros_title        = "Запрос ценовых предложений"
+  val dkt_pattern         = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
+  val dkt_title           = "Документация конкурсных торгов"
+  val misc_title          = "Тендерная документация"
 
   /**
    * Given the list of pdf/docx files, construct an html text with its titles and download links
@@ -40,14 +45,27 @@ object FileLister {
 
   def getNameForFile(filePath: String): String = {
     val lines = readFileToString(filePath).mkString
-    if ( !plan.findFirstIn(lines).isEmpty )
-      "Годовой план закупок"
-    else if ( !provedenie.findFirstIn(lines).isEmpty )
-      "Объявление о проведении открытых торгов"
-    else if ( !zapros.findFirstIn(lines).isEmpty )
-      "Запрос ценовых предложений"
+    if ( !plan_pattern.findFirstIn(lines).isEmpty )
+      plan_title
+    else if ( !provedenie_pattern.findFirstIn(lines).isEmpty )//TODO
+    {
+      val pattern = """(?s)(?<=5\.1\.).*?(»)""".r
+      val pattern2 = """(?<=«).*?(?=»)""".r
+      val lineOption = pattern.findFirstIn(lines.mkString)
+      val extractedValueOption = pattern2.findFirstIn(lineOption.getOrElse("N/A"))
+      String.format("%s (%s)", provedenie_title, extractedValueOption.getOrElse(""))
+    }
+    else if ( !zapros_pattern.findFirstIn(lines).isEmpty )//TODO
+    {
+      zapros_title
+    }
+    else if ( !dkt_pattern.findFirstIn(lines).isEmpty )//TODO
+    {
+      dkt_title
+    }
     else
-      "Документация конкурсных торгов"
+      misc_title
+
   }
 
   /**
