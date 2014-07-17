@@ -21,6 +21,8 @@ class DocToDocx(ofcDir: String, sourceFolder: String, destinationFolder: String)
    * @return Returns the exit code. Standard output and error are sent to the console.
    */
   def convert: Int = {
+    this.setFoldersToConvert
+    this.setDestinationPathTemplate
     val toolsDir = ofcDir + "Tools/"
     val convertingCommand = toolsDir + "ofc.exe " + toolsDir + "ofc.ini"
     convertingCommand.!
