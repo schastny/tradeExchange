@@ -6,6 +6,7 @@ import org.apache.tika.metadata.Metadata
 import org.apache.tika.parser.{ParsingReader, ParseContext}
 import org.apache.tika.parser.pdf.PDFParser
 
+import scala.util.matching.Regex
 import scala.util.parsing.input.StreamReader
 
 /**
@@ -21,6 +22,8 @@ object DocParser {
   val zapros_title        = "Запрос ценовых предложений"
   val dkt_pattern         = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
   val dkt_title           = "Документация конкурсных торгов"
+
+  val quotesPattern       = """(?<=«).*?(?=»)""".r
   val misc_title          = "Тендерная документация"
 
   def apply(pathToFiles: String): String = {
@@ -59,35 +62,29 @@ object DocParser {
    */
   private def constructTitleForDocument(filePath: String): String = {
     val lines = readFileInArray(filePath).mkString
+
+    def findTitle(documentPattern: Regex, lines: String) = {
+      (documentTitle: String) => {
+        val line = documentPattern.findFirstIn(lines.mkString)
+        val documentSubtitle = quotesPattern.findFirstIn(line.getOrElse("N/A"))
+        String.format("%s (%s)", documentTitle, documentSubtitle.getOrElse(""))
+      }
+    }
+    val patternForTwo = """(?s)(?<=5\.1\.).*?(»)""".r
+    val patternDkt = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
+    val findTitleForTwo = findTitle(patternForTwo, lines)
+    val findTitleDkt = findTitle(patternDkt, lines)
+
     if ( !plan_pattern.findFirstIn(lines).isEmpty )
       plan_title
     else if ( !provedenie_pattern.findFirstIn(lines).isEmpty )
-    {
-      val pattern = """(?s)(?<=5\.1\.).*?(»)""".r
-      val pattern2 = """(?<=«).*?(?=»)""".r
-      val lineOption = pattern.findFirstIn(lines.mkString)
-      val extractedValueOption = pattern2.findFirstIn(lineOption.getOrElse("N/A"))
-      String.format("%s (%s)", provedenie_title, extractedValueOption.getOrElse(""))
-    }
+      findTitleForTwo(provedenie_title)
     else if ( !zapros_pattern.findFirstIn(lines).isEmpty )
-    {
-      val pattern = """(?s)(?<=5\.1\.).*?(»)""".r
-      val pattern2 = """(?<=«).*?(?=»)""".r
-      val lineOption = pattern.findFirstIn(lines.mkString)
-      val extractedValueOption = pattern2.findFirstIn(lineOption.getOrElse("N/A"))
-      String.format("%s (%s)", zapros_title, extractedValueOption.getOrElse(""))
-    }
+      findTitleForTwo(zapros_title)
     else if ( !dkt_pattern.findFirstIn(lines).isEmpty )
-    {
-      val pattern = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
-      val pattern2 = """(?<=«).*?(?=»)""".r
-      val lineOption = pattern.findFirstIn(lines.mkString)
-      val extractedValueOption = pattern2.findFirstIn(lineOption.getOrElse("N/A"))
-      String.format("%s (%s)", dkt_title, extractedValueOption.getOrElse(""))
-    }
+      findTitleDkt(dkt_title)
     else
       misc_title
-
   }
 
   /**
