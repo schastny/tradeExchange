@@ -108,7 +108,7 @@ class DocxToPdf(saveFO: Boolean = false) {
     foSettings.setApacheFopMime(FOSettings.MIME_PDF)
 
     // exporter writes to an OutputStream.
-    val outputfilepath = inputfilepath + ".pdf"
+    val outputfilepath = inputfilepath.replace(".docx", "") + ".pdf"
     val os = new FileOutputStream(outputfilepath)
 
     // Specify whether PDF export uses XSLT or not to create the FO (XSLT takes longer, but is more complete).

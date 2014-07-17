@@ -26,8 +26,8 @@ object DocParser {
   val quotesPattern       = """(?<=«).*?(?=»)""".r
   val misc_title          = "Тендерная документация"
 
-  def apply(pathToFiles: String): String = {
-    prepareHtmlList(pathToFiles)
+  def apply(pathToFiles: String, urlPrefix: String): String = {
+    prepareHtmlList(pathToFiles, urlPrefix)
   }
 
   /**
@@ -35,10 +35,10 @@ object DocParser {
    * @param pathToFiles
    * @return
    */
-  def prepareHtmlList(pathToFiles: String): String = {
+  def prepareHtmlList(pathToFiles: String, urlPrefix: String): String = {
     constructMap(pathToFiles).map(
       tuple => {
-        String.format("<li>%s <a href='%s'>Скачать в формате pdf</a></li>", tuple._2, tuple._1)
+        String.format("<li>%s <a href='%s%s'>Скачать в формате pdf</a></li>", tuple._2, urlPrefix, tuple._1)
       }
     ).mkString("\n")
   }

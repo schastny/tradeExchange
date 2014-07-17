@@ -12,7 +12,7 @@ object Converter extends App {
   //Making translit
   val docFiles = new File(sourceDir).listFiles().filter(_.getName.endsWith(".doc"))
   docFiles foreach {
-    f => f.renameTo(new File(sourceDir+"/"+Translit(f.getName)))
+    f => f.renameTo(new File(sourceDir+"/2014_07_14_"+Translit(f.getName)))
   }
 
   //doc -> docx
@@ -27,7 +27,7 @@ object Converter extends App {
   }
 
   //generating html
-  val html = DocParser(destinationDir)
+  val html = DocParser(destinationDir, "http://1gb.sebastopol.ua/media/")
   println(html)
 
 }
