@@ -18,9 +18,17 @@ object FileLister {
   val zapros = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
   val dkt = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
 
+  /**
+   * Given the list of pdf/docx files, construct an html text with its titles and download links
+   * @param pathToFiles
+   * @return
+   */
   def apply(pathToFiles: String): String = {
-    val docxFiles = (new File(pathToFiles)).listFiles().filter(_.getName.endsWith(".docx"))
-    ""
+    constructMap(pathToFiles).map(
+      tuple => {
+        String.format("<li>%s <a href='%s'>Скачать в формате pdf</a></li>", tuple._2, tuple._1)
+      }
+    ).mkString("\n")
   }
 
   def constructMap(pathToFiles: String): Map[String, String] = {

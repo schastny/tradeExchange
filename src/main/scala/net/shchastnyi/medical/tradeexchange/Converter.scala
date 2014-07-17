@@ -27,6 +27,6 @@ object Converter extends App {
   }
 
   //parsing files
-  FileLister.constructMap(destinationDir).foreach(println)
+  println (FileLister(destinationDir))
 
 }
