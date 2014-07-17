@@ -12,7 +12,8 @@ import org.docx4j.wml.{ContentAccessor, R}
 import scala.collection.JavaConverters._
 
 /**
- *
+ * <p>An object to convert docx into pdf</p>
+ * <p>Consider using {@link #convert(String) convert} method in order to convert some docx into pdf</p>
  * @param saveFO Save the intermediate XSL FO. Don't do this in production!
  */
 class DocxToPdf(saveFO: Boolean = false) {
@@ -67,6 +68,10 @@ class DocxToPdf(saveFO: Boolean = false) {
     }
   }
 
+  /**
+   * Given the filePath to docx document, convert it to pdf
+   * @param inputfilepath
+   */
   def convert(inputfilepath: String) {
     // Set regex if you want to restrict to some defined subset of fonts
     val regex = ".*(calibri|camb|cour|arial|times|comic|georgia|impact|LSANS|pala|tahoma|trebuc|verdana|symbol|webdings|wingding).*"

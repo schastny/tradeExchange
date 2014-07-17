@@ -21,12 +21,13 @@ object Converter extends App {
 
   //docx -> pdf
   if (step1Result == 0) {
-    val doccer = new DocxToPdf
+    val pdfConverter = new DocxToPdf
     val docxFiles = new File(destinationDir).listFiles().filter(_.getName.endsWith(".docx"))
-    docxFiles foreach { f => doccer.convert(f.getAbsolutePath) }
+    docxFiles foreach { f => pdfConverter.convert(f.getAbsolutePath) }
   }
 
-  //parsing files
-  println (FileLister(destinationDir))
+  //generating html
+  val html = DocParser(destinationDir)
+  println(html)
 
 }
