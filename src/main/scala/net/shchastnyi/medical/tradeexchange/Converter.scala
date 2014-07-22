@@ -14,9 +14,9 @@ object Converter {
   val urlPrefix = "http://1gb.sebastopol.ua/media/"
 
   def main (args: Array[String]) {
-//    doTranslit
-//    doDocx
-//    doPdfLinear
+    doTranslit
+    doDocx
+    doPdfLinear
 //    doPdfConcurrent
     println(doHtml)
   }
@@ -36,6 +36,9 @@ object Converter {
     docxFiles foreach { f => pdfConverter.convert(f.getAbsolutePath) }
   }
 
+  /**
+   * Warning: Not Safe!
+   */
   def doPdfConcurrent {
     val system = ActorSystem("akka-system")
     val converter = system.actorOf(Props[DirConverter], "mainConverter")
