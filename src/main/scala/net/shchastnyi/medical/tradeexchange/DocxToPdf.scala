@@ -23,16 +23,16 @@ class DocxToPdf(saveFO: Boolean = false) {
 
   private def getAllElementFromObjectInternal(obj: AnyRef, toSearch: Class[_], result: List[AnyRef]): List[AnyRef] = {
     val objValue =
-      if (obj.isInstanceOf[JAXBElement[_]])
-        obj.asInstanceOf[JAXBElement[_]].getValue.asInstanceOf[AnyRef]
-      else
-        obj
+      obj match {
+        case value: JAXBElement[_] => value.getValue.asInstanceOf[AnyRef]
+        case _ => obj
+      }
 
     objValue match {
-      case x if (x.getClass == toSearch) => objValue :: result
+      case x if x.getClass == toSearch => objValue :: result
       case x: ContentAccessor => {
         val childrenLists =
-          for (child <- (objValue.asInstanceOf[ContentAccessor]).getContent.asScala)
+          for (child <- objValue.asInstanceOf[ContentAccessor].getContent.asScala)
             yield getAllElementFromObject(child, toSearch)
         childrenLists.flatten.toList ++ result
       }

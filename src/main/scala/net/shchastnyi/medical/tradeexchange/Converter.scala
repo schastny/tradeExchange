@@ -2,32 +2,46 @@ package net.shchastnyi.medical.tradeexchange
 
 import java.io.File
 
-object Converter extends App {
+import akka.actor.{Props, ActorSystem}
+import net.shchastnyi.actors.{ConvertDirectory, DirConverter}
 
-  //Constants
+object Converter {
+
   val ofcDir = "d:/msconverter/"
   val sourceDir = """d:\\tmp\\scala"""
   val destinationDir = """d:\\tmp\\scala\\converted"""
+  val translitPrefix = "2014_07_14_"
+  val urlPrefix = "http://1gb.sebastopol.ua/media/"
 
-  //Making translit
-  val docFiles = new File(sourceDir).listFiles().filter(_.getName.endsWith(".doc"))
-  docFiles foreach {
-    f => f.renameTo(new File(sourceDir+"/2014_07_14_"+Translit(f.getName)))
+  def main (args: Array[String]) {
+//    doTranslit
+//    doDocx
+//    doPdfLinear
+//    doPdfConcurrent
+    println(doHtml)
   }
 
-  //doc -> docx
-  val docConverter = new DocToDocx(ofcDir, sourceDir, destinationDir)
-  val step1Result = docConverter.convert
+  def doTranslit {
+    new File(sourceDir).listFiles().filter(_.getName.endsWith(".doc")).foreach {
+      f => f.renameTo(new File(sourceDir+"/"+translitPrefix+Translit(f.getName)))
+    }
+  }
 
-  //docx -> pdf
-  if (step1Result == 0) {
+  def doDocx = new DocToDocx(ofcDir, sourceDir, destinationDir).convert
+
+
+  def doPdfLinear {
     val pdfConverter = new DocxToPdf
     val docxFiles = new File(destinationDir).listFiles().filter(_.getName.endsWith(".docx"))
     docxFiles foreach { f => pdfConverter.convert(f.getAbsolutePath) }
   }
 
-  //generating html
-  val html = DocParser(destinationDir, "http://1gb.sebastopol.ua/media/")
-  println(html)
+  def doPdfConcurrent {
+    val system = ActorSystem("akka-system")
+    val converter = system.actorOf(Props[DirConverter], "mainConverter")
+    converter ! ConvertDirectory(destinationDir)
+  }
+
+  def doHtml = DocParser(destinationDir, urlPrefix)
 
 }

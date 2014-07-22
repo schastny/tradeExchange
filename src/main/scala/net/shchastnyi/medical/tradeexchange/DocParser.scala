@@ -26,9 +26,8 @@ object DocParser {
   val quotesPattern       = """(?<=«).*?(?=»)""".r
   val misc_title          = "Тендерная документация"
 
-  def apply(pathToFiles: String, urlPrefix: String): String = {
-    prepareHtmlList(pathToFiles, urlPrefix)
-  }
+  def apply(pathToFiles: String, urlPrefix: String): String = prepareHtmlList(pathToFiles, urlPrefix)
+
 
   /**
    * Given the list of pdf/docx files, construct an html text with its titles and download links
