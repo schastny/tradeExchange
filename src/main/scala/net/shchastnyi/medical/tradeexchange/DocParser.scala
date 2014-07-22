@@ -1,13 +1,13 @@
 package net.shchastnyi.medical.tradeexchange
 
-import java.io.{FileInputStream, File}
+import java.io.{BufferedReader, File, FileInputStream}
 
 import org.apache.tika.metadata.Metadata
-import org.apache.tika.parser.{ParsingReader, ParseContext}
 import org.apache.tika.parser.pdf.PDFParser
+import org.apache.tika.parser.{ParseContext, ParsingReader}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
-import scala.util.parsing.input.StreamReader
 
 /**
  * Given the list of pdf/docx files, construct an html text with its titles and download links
@@ -99,7 +99,10 @@ object DocParser {
     val context = new ParseContext()
 
     val parsReader = new ParsingReader(pdfParser, stream, metadata, context)
-    val textLines = StreamReader(parsReader).source
+//    val textLines = StreamReader(parsReader).source //Can't run in since Scala 2.11.1!
+    val buffReader = new BufferedReader(parsReader)
+    val textLines = ArrayBuffer.empty[String]
+    Stream.continually(buffReader.readLine()).takeWhile(_ != null).foreach(textLines+=_)
     stream.close()
     textLines.toString.split("\n").map(_.trim).filter(!_.isEmpty)
   }
