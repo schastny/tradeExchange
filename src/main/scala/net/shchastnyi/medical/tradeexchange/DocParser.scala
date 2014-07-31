@@ -16,12 +16,18 @@ object DocParser {
 
   val plan_pattern        = """(?s)(ГОДОВОЙ ПЛАН ЗАКУПОК).*?(на)""".r
   val plan_title          = "Годовой план закупок"
+
   val provedenie_pattern  = """(?s)(Объявление).*?(о проведении открытых торгов)""".r
   val provedenie_title    = "Объявление о проведении открытых торгов"
+
   val zapros_pattern      = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
   val zapros_title        = "Запрос ценовых предложений"
+
   val dkt_pattern         = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
   val dkt_title           = "Документация конкурсных торгов"
+
+  val otmena_pattern      = """(?s)(Уведомление).*?(про отмену торгов)""".r
+  val otmena_title        = "Уведомление про отмену торгов"
 
   val quotesPattern       = """(?<=«).*?(?=»)""".r
   val misc_title          = "Тендерная документация"
@@ -60,28 +66,33 @@ object DocParser {
    * @return
    */
   private def constructTitleForDocument(filePath: String): String = {
-    val lines = readFileInArray(filePath).mkString
+    val lines = readFileInArray(filePath).mkString(" ")
 
     def findTitle(documentPattern: Regex, lines: String) = {
       (documentTitle: String) => {
-        val line = documentPattern.findFirstIn(lines.mkString)
+        val line = documentPattern.findFirstIn(lines)
         val documentSubtitle = quotesPattern.findFirstIn(line.getOrElse("N/A"))
         String.format("%s (%s)", documentTitle, documentSubtitle.getOrElse(""))
       }
     }
+
     val patternForTwo = """(?s)(?<=5\.1\.).*?(»)""".r
     val patternDkt = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
+    val patternOtmena = """(?s)(?<=2\.1\.).*?(»)""".r
     val findTitleForTwo = findTitle(patternForTwo, lines)
-    val findTitleDkt = findTitle(patternDkt, lines)
+    val findTitleDkt = findTitle(patternDkt, lines)(dkt_title)
+    val findTitleOtmena = findTitle(patternOtmena, lines)(otmena_title)
 
-    if ( !plan_pattern.findFirstIn(lines).isEmpty )
+    if ( plan_pattern.findFirstIn(lines).nonEmpty )
       plan_title
-    else if ( !provedenie_pattern.findFirstIn(lines).isEmpty )
+    else if ( provedenie_pattern.findFirstIn(lines).nonEmpty )
       findTitleForTwo(provedenie_title)
-    else if ( !zapros_pattern.findFirstIn(lines).isEmpty )
+    else if ( zapros_pattern.findFirstIn(lines).nonEmpty )
       findTitleForTwo(zapros_title)
-    else if ( !dkt_pattern.findFirstIn(lines).isEmpty )
-      findTitleDkt(dkt_title)
+    else if ( dkt_pattern.findFirstIn(lines).nonEmpty )
+      findTitleDkt
+    else if ( otmena_pattern.findFirstIn(lines).nonEmpty )
+      findTitleOtmena
     else
       misc_title
   }
@@ -98,12 +109,11 @@ object DocParser {
     val context = new ParseContext()
 
     val parsReader = new ParsingReader(pdfParser, stream, metadata, context)
-//    val textLines = StreamReader(parsReader).source //Can't run in since Scala 2.11.1!
     val buffReader = new BufferedReader(parsReader)
     val textLines = ArrayBuffer.empty[String]
     Stream.continually(buffReader.readLine()).takeWhile(_ != null).foreach(textLines+=_)
     stream.close()
-    textLines.toString.split("\n").map(_.trim).filter(!_.isEmpty)
+    textLines.map(_.trim).filter(!_.isEmpty).toArray
   }
 
 }

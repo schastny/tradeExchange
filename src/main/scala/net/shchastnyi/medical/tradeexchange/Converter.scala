@@ -1,8 +1,7 @@
 package net.shchastnyi.medical.tradeexchange
 
-import java.io.File
-
-import akka.actor.{Props, ActorSystem}
+import java.io.{File, PrintWriter}
+import akka.actor.{ActorSystem, Props}
 import net.shchastnyi.actors.{ConvertDirectory, DirConverter}
 
 object Converter {
@@ -18,7 +17,11 @@ object Converter {
     doDocx
     doPdfLinear
 //    doPdfConcurrent
-    println(doHtml)
+
+    val html = doHtml
+    val s = new PrintWriter(sourceDir+"/tradingdocs.html")
+    s.print(html)
+    s.close()
   }
 
   def doTranslit {
