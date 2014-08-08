@@ -14,18 +14,31 @@ object Converter {
   val urlPrefixDefault      = "http://1gb.sebastopol.ua/media/"
   // !Default options
 
+  val helpKey       = "--help"
   val ofcDirKey     = "--ofcDir"
   val sourceDirKey  = "--sourceDir"
   val destDirKey    = "--destDir"
   val filePrefixKey = "--filePrefix"
   val urlPrefixKey  = "--urlPrefix"
-  val usage = s"Usage: converter [$ofcDirKey ofcDir] [$sourceDirKey sourceFilesDir] [$destDirKey destinationDir] [$filePrefixKey String] [$urlPrefixKey url]"
+  val usage =
+    s"Usage: converter " +
+    s"[$ofcDirKey ofcDir, default:$ofcDirDefault] " +
+    s"[$sourceDirKey sourceFilesDir, default:$sourceDirDefault] " +
+    s"[$destDirKey destinationDir, default: $sourceDirDefault/converted] " +
+    s"[$filePrefixKey String, default:$filePrefixDefault] " +
+    s"[$urlPrefixKey url, default:$urlPrefixDefault]"
   type OptionMap = Map[String, String]
 
   def main (args: Array[String]) {
     // Parsing command-line args
-    if (args.length == 0) println(usage)
     val options         = getArgsAsMap(Map(), args.toList)
+
+    val help            = options.getOrElse(helpKey, Nil)
+    if (help != Nil) {
+      println(usage)
+      return
+    }
+
     val ofcDir          = options.getOrElse(ofcDirKey, ofcDirDefault)
     val sourceDir       = options.getOrElse(sourceDirKey, sourceDirDefault)
     val destinationDir  = options.getOrElse(destDirKey, sourceDir + "/converted")
@@ -52,6 +65,7 @@ object Converter {
     def isSwitch(s : String) = s(0) == '-'
     list match {
       case Nil                                      => map
+      case helpKey :: tail                          => getArgsAsMap(map ++ Map(helpKey -> helpKey), tail)
       case ofcDirKey :: value :: tail               => getArgsAsMap(map ++ Map(ofcDirKey -> value), tail)
       case sourceDirKey :: value :: tail            => getArgsAsMap(map ++ Map(sourceDirKey -> value), tail)
       case destDirKey :: value :: tail              => getArgsAsMap(map ++ Map(destDirKey -> value), tail)

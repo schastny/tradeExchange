@@ -23,11 +23,17 @@ object DocParser {
   val zapros_pattern      = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
   val zapros_title        = "Запрос ценовых предложений"
 
+  val zapros_results_pattern     = """(?s)(ОБЪЯВЛЕНИЕ).*?(о результатах проведения процедуры запроса ценовых предложений)""".r
+  val zapros_results_title       = "Результаты запроса ценовых предложений"
+
   val dkt_pattern         = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
   val dkt_title           = "Документация конкурсных торгов"
 
-  val otmena_pattern      = """(?s)(Уведомление).*?(про отмену торгов)""".r
-  val otmena_title        = "Уведомление про отмену торгов"
+  val uvedoml_otmena_pattern      = """(?s)(Уведомление).*?(про отмену торгов)""".r
+  val uvedoml_otmena_title        = "Уведомление про отмену торгов"
+
+  val uvedoml_accept_pattern      = """(?s)(УВЕДОМЛЕНИЕ).*?(об акцепте)""".r
+  val uvedoml_accept_title = "Уведомление об акцепте предложения к онкурсных торгов"
 
   val quotesPattern       = """(?<=«).*?(?=»)""".r
   val misc_title          = "Тендерная документация"
@@ -76,12 +82,16 @@ object DocParser {
       }
     }
 
-    val patternForTwo = """(?s)(?<=5\.1\.).*?(»)""".r
-    val patternDkt = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
-    val patternOtmena = """(?s)(?<=2\.1\.).*?(»)""".r
+    val patternForTwo   = """(?s)(?<=5\.1\.).*?(»)""".r
+    val patternResult   = """(?s)(?<=3\.1\.).*?(»)""".r
+    val patternDkt      = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
+    val patternOtmena   = """(?s)(?<=2\.1\.).*?(»)""".r
+    val patternAccept   = """(?s)(?<=2\.1\.).*?(»)""".r
     val findTitleForTwo = findTitle(patternForTwo, lines)
-    val findTitleDkt = findTitle(patternDkt, lines)(dkt_title)
-    val findTitleOtmena = findTitle(patternOtmena, lines)(otmena_title)
+    val findTitleResult = findTitle(patternResult, lines)(zapros_results_title)
+    val findTitleDkt    = findTitle(patternDkt, lines)(dkt_title)
+    val findTitleOtmena = findTitle(patternOtmena, lines)(uvedoml_otmena_title)
+    val findTitleAccept = findTitle(patternAccept, lines)(uvedoml_accept_title)
 
     if ( plan_pattern.findFirstIn(lines).nonEmpty )
       plan_title
@@ -89,10 +99,14 @@ object DocParser {
       findTitleForTwo(provedenie_title)
     else if ( zapros_pattern.findFirstIn(lines).nonEmpty )
       findTitleForTwo(zapros_title)
+    else if ( zapros_results_pattern.findFirstIn(lines).nonEmpty )
+      findTitleResult
     else if ( dkt_pattern.findFirstIn(lines).nonEmpty )
       findTitleDkt
-    else if ( otmena_pattern.findFirstIn(lines).nonEmpty )
+    else if ( uvedoml_otmena_pattern.findFirstIn(lines).nonEmpty )
       findTitleOtmena
+    else if ( uvedoml_accept_pattern.findFirstIn(lines).nonEmpty )
+      findTitleAccept
     else
       misc_title
   }
