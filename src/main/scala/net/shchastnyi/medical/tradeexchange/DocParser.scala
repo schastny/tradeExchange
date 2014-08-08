@@ -14,29 +14,35 @@ import scala.util.matching.Regex
  */
 object DocParser {
 
-  val plan_pattern        = """(?s)(ГОДОВОЙ ПЛАН ЗАКУПОК).*?(на)""".r
-  val plan_title          = "Годовой план закупок"
+  val plan_pattern = """(?s)(ГОДОВОЙ ПЛАН ЗАКУПОК).*?(на)""".r
+  val plan_title = "Годовой план закупок"
 
-  val provedenie_pattern  = """(?s)(Объявление).*?(о проведении открытых торгов)""".r
-  val provedenie_title    = "Объявление о проведении открытых торгов"
+  val provedenie_pattern    = """(?s)(Объявление).*?(о проведении открытых торгов)""".r
+  val provedenie_title      = "Объявление о проведении открытых торгов"
+  val provedenie_extract    = """(?s)(?<=5\.1\.).*?(»)""".r
 
-  val zapros_pattern      = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
-  val zapros_title        = "Запрос ценовых предложений"
+  val zapros_pattern        = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
+  val zapros_title          = "Запрос ценовых предложений"
+  val zapros_extract        = """(?s)(?<=5\.1\.).*?(»)""".r
 
-  val zapros_results_pattern     = """(?s)(ОБЪЯВЛЕНИЕ).*?(о результатах проведения процедуры запроса ценовых предложений)""".r
-  val zapros_results_title       = "Результаты запроса ценовых предложений"
+  val zaprosResults_pattern = """(?s)(ОБЪЯВЛЕНИЕ).*?(о результатах проведения процедуры запроса ценовых предложений)""".r
+  val zaprosResults_title   = "Результаты запроса ценовых предложений"
+  val zaprosResults_extract = """(?s)(?<=3\.1\.).*?(»)""".r
 
-  val dkt_pattern         = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
-  val dkt_title           = "Документация конкурсных торгов"
+  val dkt_pattern           = """(?s)ДОКУМЕНТАЦИЯ КОНКУРСНЫХ ТОРГОВ""".r
+  val dkt_title             = "Документация конкурсных торгов"
+  val dkt_extract           = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
 
-  val uvedoml_otmena_pattern      = """(?s)(Уведомление).*?(про отмену торгов)""".r
-  val uvedoml_otmena_title        = "Уведомление про отмену торгов"
+  val uvedomlOtmena_pattern = """(?s)(Уведомление).*?(про отмену торгов)""".r
+  val uvedomlOtmena_title   = "Уведомление про отмену торгов"
+  val uvedomlOtmena_extract = """(?s)(?<=2\.1\.).*?(»)""".r
 
-  val uvedoml_accept_pattern      = """(?s)(УВЕДОМЛЕНИЕ).*?(об акцепте)""".r
-  val uvedoml_accept_title = "Уведомление об акцепте предложения к онкурсных торгов"
+  val uvedomlAccept_pattern = """(?s)(УВЕДОМЛЕНИЕ).*?(об акцепте)""".r
+  val uvedomlAccept_title   = "Уведомление об акцепте предложения к онкурсных торгов"
+  val uvedomlAccept_extract = """(?s)(?<=2\.1\.).*?(»)""".r
 
-  val quotesPattern       = """(?<=«).*?(?=»)""".r
-  val misc_title          = "Тендерная документация"
+  val quotesPattern = """(?<=«).*?(?=»)""".r
+  val misc_title = "Тендерная документация"
 
   def apply(pathToFiles: String, urlPrefix: String): String = prepareHtmlList(pathToFiles, urlPrefix)
 
@@ -74,41 +80,24 @@ object DocParser {
   private def constructTitleForDocument(filePath: String): String = {
     val lines = readFileInArray(filePath).mkString(" ")
 
-    def findTitle(documentPattern: Regex, lines: String) = {
-      (documentTitle: String) => {
+    def titleMatches(pattern: Regex): Boolean = {
+      pattern.findFirstIn(lines).nonEmpty
+    }
+
+    def findTitle(documentPattern: Regex, documentTitle: String) = {
         val line = documentPattern.findFirstIn(lines)
         val documentSubtitle = quotesPattern.findFirstIn(line.getOrElse("N/A"))
         String.format("%s (%s)", documentTitle, documentSubtitle.getOrElse(""))
-      }
     }
 
-    val patternForTwo   = """(?s)(?<=5\.1\.).*?(»)""".r
-    val patternResult   = """(?s)(?<=3\.1\.).*?(»)""".r
-    val patternDkt      = """(?s)(?<=открытых торгов по закупке:).*?(»)""".r
-    val patternOtmena   = """(?s)(?<=2\.1\.).*?(»)""".r
-    val patternAccept   = """(?s)(?<=2\.1\.).*?(»)""".r
-    val findTitleForTwo = findTitle(patternForTwo, lines)
-    val findTitleResult = findTitle(patternResult, lines)(zapros_results_title)
-    val findTitleDkt    = findTitle(patternDkt, lines)(dkt_title)
-    val findTitleOtmena = findTitle(patternOtmena, lines)(uvedoml_otmena_title)
-    val findTitleAccept = findTitle(patternAccept, lines)(uvedoml_accept_title)
-
-    if ( plan_pattern.findFirstIn(lines).nonEmpty )
-      plan_title
-    else if ( provedenie_pattern.findFirstIn(lines).nonEmpty )
-      findTitleForTwo(provedenie_title)
-    else if ( zapros_pattern.findFirstIn(lines).nonEmpty )
-      findTitleForTwo(zapros_title)
-    else if ( zapros_results_pattern.findFirstIn(lines).nonEmpty )
-      findTitleResult
-    else if ( dkt_pattern.findFirstIn(lines).nonEmpty )
-      findTitleDkt
-    else if ( uvedoml_otmena_pattern.findFirstIn(lines).nonEmpty )
-      findTitleOtmena
-    else if ( uvedoml_accept_pattern.findFirstIn(lines).nonEmpty )
-      findTitleAccept
-    else
-      misc_title
+    if ( titleMatches(plan_pattern) ) plan_title
+    else if ( titleMatches(provedenie_pattern) )    findTitle(provedenie_extract, provedenie_title)
+    else if ( titleMatches(zapros_pattern) )        findTitle(zapros_extract, zapros_title)
+    else if ( titleMatches(zaprosResults_pattern) ) findTitle(zaprosResults_extract, zaprosResults_title)
+    else if ( titleMatches(dkt_pattern) )           findTitle(dkt_extract, dkt_title)
+    else if ( titleMatches(uvedomlOtmena_pattern) ) findTitle(uvedomlOtmena_extract, uvedomlOtmena_title)
+    else if ( titleMatches(uvedomlAccept_pattern) ) findTitle(uvedomlAccept_extract, uvedomlAccept_title)
+    else misc_title
   }
 
   /**
