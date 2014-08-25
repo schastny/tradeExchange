@@ -21,6 +21,10 @@ object DocParser {
   val provedenie_title      = "Объявление о проведении открытых торгов"
   val provedenie_extract    = """(?s)(?<=5\.1\.).*?(»)""".r
 
+  val obyavlenie_resultat_pattern    = """(?s)(ОБЪЯВЛЕНИЕ).*?(о результатах проведения торгов)""".r
+  val obyavlenie_resultat_title      = "Объявление о результатах проведения торгов"
+  val obyavlenie_resultat_extract    = """(?s)(?<=4\.1\.).*?(4\.2\.)""".r
+
   val zapros_pattern        = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
   val zapros_title          = "Запрос ценовых предложений"
   val zapros_extract        = """(?s)(?<=5\.1\.).*?(»)""".r
@@ -45,7 +49,6 @@ object DocParser {
   val misc_title = "Тендерная документация"
 
   def apply(pathToFiles: String, urlPrefix: String): String = prepareHtmlList(pathToFiles, urlPrefix)
-
 
   /**
    * Given the list of pdf/docx files, construct an html text with its titles and download links
@@ -91,12 +94,13 @@ object DocParser {
     }
 
     if ( titleMatches(plan_pattern) ) plan_title
-    else if ( titleMatches(provedenie_pattern) )    findTitle(provedenie_extract, provedenie_title)
-    else if ( titleMatches(zapros_pattern) )        findTitle(zapros_extract, zapros_title)
-    else if ( titleMatches(zaprosResults_pattern) ) findTitle(zaprosResults_extract, zaprosResults_title)
-    else if ( titleMatches(dkt_pattern) )           findTitle(dkt_extract, dkt_title)
-    else if ( titleMatches(uvedomlOtmena_pattern) ) findTitle(uvedomlOtmena_extract, uvedomlOtmena_title)
-    else if ( titleMatches(uvedomlAccept_pattern) ) findTitle(uvedomlAccept_extract, uvedomlAccept_title)
+    else if ( titleMatches(provedenie_pattern) )          findTitle(provedenie_extract, provedenie_title)
+    else if ( titleMatches(obyavlenie_resultat_pattern) ) findTitle(obyavlenie_resultat_extract, obyavlenie_resultat_title)
+    else if ( titleMatches(zapros_pattern) )              findTitle(zapros_extract, zapros_title)
+    else if ( titleMatches(zaprosResults_pattern) )       findTitle(zaprosResults_extract, zaprosResults_title)
+    else if ( titleMatches(dkt_pattern) )                 findTitle(dkt_extract, dkt_title)
+    else if ( titleMatches(uvedomlOtmena_pattern) )       findTitle(uvedomlOtmena_extract, uvedomlOtmena_title)
+    else if ( titleMatches(uvedomlAccept_pattern) )       findTitle(uvedomlAccept_extract, uvedomlAccept_title)
     else misc_title
   }
 
