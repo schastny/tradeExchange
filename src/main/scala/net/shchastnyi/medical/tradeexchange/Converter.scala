@@ -15,18 +15,20 @@ object Converter {
   // !Default options
 
   val helpKey       = "--help"
+  val debugKey      = "--debug"
   val ofcDirKey     = "--ofcDir"
   val sourceDirKey  = "--sourceDir"
   val destDirKey    = "--destDir"
   val filePrefixKey = "--filePrefix"
   val urlPrefixKey  = "--urlPrefix"
   val usage =
-    s"Usage: converter " +
-    s"[$ofcDirKey ofcDir, default:$ofcDirDefault] " +
-    s"[$sourceDirKey sourceFilesDir, default:$sourceDirDefault] " +
-    s"[$destDirKey destinationDir, default: $sourceDirDefault/converted] " +
-    s"[$filePrefixKey String, default:$filePrefixDefault] " +
-    s"[$urlPrefixKey url, default:$urlPrefixDefault]"
+    s"Usage: converter \n" +
+    s"[$debugKey print options applied] \n" +
+    s"[$ofcDirKey ofcDir, default: $ofcDirDefault] \n" +
+    s"[$sourceDirKey sourceFilesDir, default: $sourceDirDefault] \n" +
+    s"[$destDirKey destinationDir, default: $sourceDirDefault/converted] \n" +
+    s"[$filePrefixKey String, default: $filePrefixDefault] \n" +
+    s"[$urlPrefixKey url, default: $urlPrefixDefault]"
   type OptionMap = Map[String, String]
 
   def main (args: Array[String]) {
@@ -46,6 +48,19 @@ object Converter {
     val urlPrefix       = options.getOrElse(urlPrefixKey, urlPrefixDefault)
     // !Parsing command-line args
 
+    // Printing arguments
+    if (options.get(debugKey) != None) {
+      val arguments =
+        s"Applying arguments: \n" +
+          s"$ofcDirKey: $ofcDir \n" +
+          s"$sourceDirKey: $sourceDir \n" +
+          s"$destDirKey: $destinationDir \n" +
+          s"$filePrefixKey: $filePrefix \n" +
+          s"$urlPrefixKey: $urlPrefix"
+      println(arguments)
+    }
+    // !Printing arguments
+
     // Doing main job
     doTranslit(filePrefix, sourceDir)
     doDocx(ofcDir, sourceDir, destinationDir)
@@ -62,18 +77,16 @@ object Converter {
    * @return
    */
   private def getArgsAsMap(map: OptionMap, list: List[String]): OptionMap = {
-    def isSwitch(s : String) = s(0) == '-'
     list match {
-      case Nil                                      => map
-      case helpKey :: tail                          => getArgsAsMap(map ++ Map(helpKey -> helpKey), tail)
-      case ofcDirKey :: value :: tail               => getArgsAsMap(map ++ Map(ofcDirKey -> value), tail)
-      case sourceDirKey :: value :: tail            => getArgsAsMap(map ++ Map(sourceDirKey -> value), tail)
-      case destDirKey :: value :: tail              => getArgsAsMap(map ++ Map(destDirKey -> value), tail)
-      case filePrefixKey :: value :: tail           => getArgsAsMap(map ++ Map(filePrefixKey -> value), tail)
-      case urlPrefixKey :: value :: tail            => getArgsAsMap(map ++ Map(urlPrefixKey -> value), tail)
-      case string :: opt2 :: tail if isSwitch(opt2) => getArgsAsMap(map ++ Map("infile" -> string), list.tail)
-      case string :: Nil                            => getArgsAsMap(map ++ Map("infile" -> string), list.tail)
-      case option :: tail                           => println("Unknown option "+option); map
+      case Nil => map
+      case "--help" :: tail =>
+                  getArgsAsMap(map ++ Map(helpKey -> helpKey), tail)
+      case "--debug" :: tail =>
+                  getArgsAsMap(map ++ Map(debugKey -> debugKey), tail)
+      case someKey :: value :: tail if someKey.startsWith("--") =>
+                  getArgsAsMap(map ++ Map(someKey -> value), tail)
+      case option :: tail =>
+                  println("Unknown option "+option); map
     }
   }
 
