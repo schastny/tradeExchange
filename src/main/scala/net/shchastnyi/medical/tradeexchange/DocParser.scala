@@ -23,7 +23,7 @@ object DocParser {
 
   val obyavlenie_resultat_pattern    = """(?s)(ОБЪЯВЛЕНИЕ).*?(о результатах проведения торгов)""".r
   val obyavlenie_resultat_title      = "Объявление о результатах проведения торгов"
-  val obyavlenie_resultat_extract    = """(?s)(?<=4\.1\.).*?(4\.2\.)""".r
+  val obyavlenie_resultat_extract    = """(?s)(?<=Наименование предмета закупки.).*?(?=(4\.2\.))""".r
 
   val zapros_pattern        = """(?s)(ЗАПРОС).*?(ценовых предложений)""".r
   val zapros_title          = "Запрос ценовых предложений"
@@ -90,7 +90,7 @@ object DocParser {
     def findTitle(documentPattern: Regex, documentTitle: String) = {
         val line = documentPattern.findFirstIn(lines)
         val documentSubtitle = quotesPattern.findFirstIn(line.getOrElse("N/A"))
-        String.format("%s (%s)", documentTitle, documentSubtitle.getOrElse(""))
+        String.format("%s (%s)", documentTitle, documentSubtitle.getOrElse(line.getOrElse("N/A").trim))
     }
 
     if ( titleMatches(plan_pattern) ) plan_title
